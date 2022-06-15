@@ -99,7 +99,7 @@ describe('deleting a blog post', () => {
     const blogs = await helper.blogsInDb()
 
     const blogToDelete = blogs[0]
-    console.log(blogToDelete)
+    // console.log(blogToDelete)
 
     await api
     .delete(`/api/blogs/${blogToDelete.id}`)
@@ -115,6 +115,27 @@ describe('deleting a blog post', () => {
   })
 })
 
+describe('updating a blog post', () => {
+  test('updating a valid post\'s likes', async () => {
+    const blogs = await helper.blogsInDb()
+
+    const blogToUpdate = blogs[0]
+
+    const newBlog = {
+      likes: blogToUpdate.likes + 1
+    }
+
+    await api
+    .put(`/api/blogs/${blogToUpdate.id}`)
+    .send(newBlog)
+    .expect(200)
+
+    const updatedBlogs = await helper.blogsInDb()
+    expect(updatedBlogs[0].likes).toEqual(blogToUpdate.likes + 1)
+
+
+  })
+})
 
 
 afterAll(() => {
