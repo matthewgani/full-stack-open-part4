@@ -23,7 +23,7 @@ const favoriteBlog = (blogs) => {
     author: f.author,
     likes: f.likes
   }
-  console.log(typeof(res))
+  // console.log(typeof(res))
 
   return res
 }
