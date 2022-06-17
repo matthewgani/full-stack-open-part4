@@ -57,6 +57,9 @@ blogsRouter.post('/', async (request, response) => {
   //   })
   const savedBlog = await blog.save()
   response.status(201).json(savedBlog)
+  // we only use the blogSchema change when returning json
+  // meaning we only return .id (string) instead of __id and __v which savedBlog has
+  
 })
 
 module.exports = blogsRouter
