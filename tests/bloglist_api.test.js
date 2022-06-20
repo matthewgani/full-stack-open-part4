@@ -13,6 +13,26 @@ beforeEach(async () => {
   // await blogObject.save()
   // blogObject = new Blog(helper.initialBlogs[1])
   // await blogObject.save()
+  const createUser = {
+    "username": "guest12",
+    "name": "mr white",
+    "password":"216"
+  }
+  await api
+        .post('/api/users')
+        .send(createUser)
+  
+  // log in to get the token
+  const login = {
+    "username": "guest12",
+    "password": "216"
+  }
+  const res = await api
+    .post('/api/login')
+    .send(login)
+  
+  helper.validToken = res.body.token
+
 })
 
 describe('when there are initial saved notes', () => {
@@ -46,8 +66,11 @@ describe('addition of a new blog post', () => {
       url: 'http',
       likes: 15
     }
+    token = "bearer ".concat(helper.validToken)
+
     await api
       .post('/api/blogs')
+      .set('Authorization', token)
       .send(newBlog)
       .expect(201)
       .expect('Content-Type', /application\/json/)
@@ -66,8 +89,12 @@ describe('addition of a new blog post', () => {
       author: 'matt',
       url: 'http'
     }
+
+    token = "bearer ".concat(helper.validToken)
+
     await api
       .post('/api/blogs')
+      .set('Authorization', token)
       .send(newBlog)
       .expect(201)
       .expect('Content-Type', /application\/json/)
@@ -85,29 +112,72 @@ describe('addition of a new blog post', () => {
       author: 'matt',
       likes: 16
     }
-  
+    token = "bearer ".concat(helper.validToken)
     await api
     .post('/api/blogs')
+    .set('Authorization', token)
     .send(newBlog)
     .expect(400)
     .expect('Content-Type', /application\/json/)
+  })
+
+  test('posting blog with no token returns 401', async () => {
+    const newBlog = {
+      title: 'panda',
+      author: 'matt',
+      url: 'http',
+      likes: 15
+    }
+    token = "bearer ".concat(helper.validToken)
+
+    // no setting of Authorization header
+    await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .expect(401)
+      .expect('Content-Type', /application\/json/)
   })
 })
 
 describe('deleting a blog post', () => {
   test('deleting a valid post', async () => {
-    const blogs = await helper.blogsInDb()
 
-    const blogToDelete = blogs[0]
+
+    // adding a new post
+    const newBlog = {
+      title: 'panda',
+      author: 'matt',
+      url: 'http',
+      likes: 15
+    }
+    token = "bearer ".concat(helper.validToken)
+
+    const res = await api
+      .post('/api/blogs')
+      .set('Authorization', token)
+      .send(newBlog)
+      .expect(201)
+      .expect('Content-Type', /application\/json/)
+
+
+    let blogId = res.body.id
+
+    const blogsAtStart = await helper.blogsInDb()
+    let blogToDelete = await Blog.findById(blogId)
+
+    // const blogs = await helper.blogsInDb()
+
+    // const blogToDelete = blogs[0]
     // console.log(blogToDelete)
 
     await api
-    .delete(`/api/blogs/${blogToDelete.id}`)
+    .delete(`/api/blogs/${blogId}`)
+    .set('Authorization', token)
     .expect(204)
 
     const blogsAtEnd = await helper.blogsInDb()
 
-    expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length - 1)
+    expect(blogsAtEnd).toHaveLength(blogsAtStart.length - 1)
 
     const contents = blogsAtEnd.map(r => r.title)
     expect(contents).not.toContain(blogToDelete.title)
