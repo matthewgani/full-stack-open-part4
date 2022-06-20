@@ -3,15 +3,17 @@ const Blog = require('../models/blog')
 const User = require('../models/user')
 const jwt = require('jsonwebtoken')
 
-const getTokenFrom = request => {
-  const authorization = request.get('authorization')
-  // bearer <token>
-  if (authorization && authorization.toLowerCase().startsWith('bearer ')) {
-    return authorization.substring(7)
-    // returns the token
-  }
-  return null
-}
+
+// moved to middleware
+// const getTokenFrom = request => {
+//   const authorization = request.get('authorization')
+//   // bearer <token>
+//   if (authorization && authorization.toLowerCase().startsWith('bearer ')) {
+//     return authorization.substring(7)
+//     // returns the token
+//   }
+//   return null
+// }
 
 blogsRouter.get('/', async (request, response) => {
   // Blog
@@ -67,12 +69,14 @@ blogsRouter.post('/', async (request, response) => {
 
   // request Headers needs Key Authorization 
   // with value 'bearer <token>'
+  // const token = getTokenFrom(request)
 
-  const token = getTokenFrom(request)
-  if (!token) {
-    return response.status(401).json({error: 'No token in header'})
-  }
-  const decodedToken = jwt.verify(token, process.env.SECRET)
+  // if (!request.token) {
+  //   return response.status(401).json({error: 'No token in header'})
+  // }
+
+  // handled if no token or if invalid token in middleware errorhandler
+  const decodedToken = jwt.verify(request.token, process.env.SECRET)
   // contains username, id and iat. username and id were created in userForToken
   // in login.js
 
