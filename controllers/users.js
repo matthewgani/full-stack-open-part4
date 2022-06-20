@@ -40,7 +40,10 @@ usersRouter.post('/', async (request, response) => {
 })
 
 usersRouter.get('/', async (request, response) => {
-  const users = await User.find({})
+  const users = await User.find({}).populate('blogs', {title : 1, url: 1, author: 1} )
+
+  // we populate with blogs param bc User has a blogs param, which looks for object ID from Blog items in collection
+  
   response.json(users)
 })
 module.exports = usersRouter

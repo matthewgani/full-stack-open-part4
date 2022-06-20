@@ -8,7 +8,9 @@ blogsRouter.get('/', async (request, response) => {
   //   .then(blogs => {
   //     response.json(blogs)
   //   })
-  const blogs = await Blog.find({})
+  const blogs = await Blog.find({}).populate('user', {username:1, name: 1})
+  // the json below will change the user object according to userSchema too
+  // we populate with the parameter user because Blog has a user param
   response.json(blogs)
 })
 
@@ -50,17 +52,20 @@ blogsRouter.post('/', async (request, response) => {
   if (request.body.title === undefined && request.body.url === undefined) {
     return response.status(400).json('No title and url')
   }
-  // const user = await User.findById(body.userId)
+  const users = await User.find({})
+  const user = users[0]
 
-  const blog = new Blog(request.body)
+  const body = request.body
+
+  // const blog = new Blog(request.body)
   
-  // const blog = new Blog({
-  //   title: body.title,
-  //   author: body.author,
-  //   url: body.url,
-  //   likes: body.likes,
-  //   user: user._id
-  // })
+  const blog = new Blog({
+    title: body.title,
+    author: body.author,
+    url: body.url,
+    likes: body.likes,
+    user: user._id
+  })
   //gives the user._id (id object) to be saved to the DB.
   // in the db, the blog will have the user id object, referencing the user in the user collection
 
@@ -72,8 +77,8 @@ blogsRouter.post('/', async (request, response) => {
   //   })
   const savedBlog = await blog.save()
 
-  // user.blogs = user.blogs.concat(savedBlog._id)
-  // await user.save()
+  user.blogs = user.blogs.concat(savedBlog._id)
+  await user.save()
 
 
 
