@@ -2,18 +2,11 @@ const blogsRouter = require('express').Router()
 const Blog = require('../models/blog')
 const User = require('../models/user')
 const jwt = require('jsonwebtoken')
+const { userExtractor } = require('../utils/middleware')
 
 
-// moved to middleware
-// const getTokenFrom = request => {
-//   const authorization = request.get('authorization')
-//   // bearer <token>
-//   if (authorization && authorization.toLowerCase().startsWith('bearer ')) {
-//     return authorization.substring(7)
-//     // returns the token
-//   }
-//   return null
-// }
+// moved token checking to middleware
+
 
 blogsRouter.get('/', async (request, response) => {
   // Blog
@@ -27,15 +20,16 @@ blogsRouter.get('/', async (request, response) => {
   response.json(blogs)
 })
 
-blogsRouter.delete('/:id', async (request, response) => {
+blogsRouter.delete('/:id', userExtractor, async (request, response) => {
 
-  const decodedToken = jwt.verify(request.token, process.env.SECRET)
+  // const decodedToken = jwt.verify(request.token, process.env.SECRET)
 
   //handled in middleware
   // if (!decodedToken.id) {
   //   return response.status(401).json({error: 'token missing or invalid'})
   // }
-  const userid = decodedToken.id
+
+  const userid = request.user.id
 
   const blog = await Blog.findById(request.params.id)
 
@@ -78,7 +72,7 @@ blogsRouter.put('/:id', async (request, response) => {
 
 
 
-blogsRouter.post('/', async (request, response) => {
+blogsRouter.post('/', userExtractor, async (request, response) => {
   if (request.body.likes === undefined) {
     request.body.likes = 0
   }
@@ -96,18 +90,19 @@ blogsRouter.post('/', async (request, response) => {
   // }
 
   // handled if no token or if invalid token in middleware errorhandler
-  const decodedToken = jwt.verify(request.token, process.env.SECRET)
+  // const decodedToken = jwt.verify(request.token, process.env.SECRET)
   // contains username, id and iat. username and id were created in userForToken
   // in login.js
 
   //The object decoded from the token contains the username and id fields,
   // which tells the server who made the request.
+  
 
-  if (!decodedToken.id) {
-    return response.status(401).json({error: 'token missing or invalid'})
-  }
+  // if (!decodedToken.id) {
+  //   return response.status(401).json({error: 'token missing or invalid'})
+  // }
 
-  const user = await User.findById(decodedToken.id)
+  const user = request.user
 
   // const blog = new Blog(request.body)
   
