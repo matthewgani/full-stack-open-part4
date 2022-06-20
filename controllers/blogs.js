@@ -1,5 +1,6 @@
 const blogsRouter = require('express').Router()
 const Blog = require('../models/blog')
+const User = require('../models/user')
 
 blogsRouter.get('/', async (request, response) => {
   // Blog
@@ -49,13 +50,34 @@ blogsRouter.post('/', async (request, response) => {
   if (request.body.title === undefined && request.body.url === undefined) {
     return response.status(400).json('No title and url')
   }
+  // const user = await User.findById(body.userId)
+
   const blog = new Blog(request.body)
+  
+  // const blog = new Blog({
+  //   title: body.title,
+  //   author: body.author,
+  //   url: body.url,
+  //   likes: body.likes,
+  //   user: user._id
+  // })
+  //gives the user._id (id object) to be saved to the DB.
+  // in the db, the blog will have the user id object, referencing the user in the user collection
+
+
   // blog
   //   .save()
   //   .then(result => {
   //     response.status(201).json(result)
   //   })
   const savedBlog = await blog.save()
+
+  // user.blogs = user.blogs.concat(savedBlog._id)
+  // await user.save()
+
+
+
+
   response.status(201).json(savedBlog)
   // we only use the blogSchema change when returning json
   // meaning we only return .id (string) instead of __id and __v which savedBlog has
