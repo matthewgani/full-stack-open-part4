@@ -1,6 +1,17 @@
 const blogsRouter = require('express').Router()
 const Blog = require('../models/blog')
 const User = require('../models/user')
+const jwt = require('jsonwebtoken')
+
+const getTokenFrom = request => {
+  const authorization = request.get('authorization')
+  // bearer <token>
+  if (authorization && authorization.toLowerCase().startsWith('bearer ')) {
+    return authorization.substring(7)
+    // returns the token
+  }
+  return null
+}
 
 blogsRouter.get('/', async (request, response) => {
   // Blog
@@ -52,10 +63,27 @@ blogsRouter.post('/', async (request, response) => {
   if (request.body.title === undefined && request.body.url === undefined) {
     return response.status(400).json('No title and url')
   }
-  const users = await User.find({})
-  const user = users[0]
-
   const body = request.body
+
+  // request Headers needs Key Authorization 
+  // with value 'bearer <token>'
+
+  const token = getTokenFrom(request)
+  if (!token) {
+    return response.status(401).json({error: 'No token in header'})
+  }
+  const decodedToken = jwt.verify(token, process.env.SECRET)
+  // contains username, id and iat. username and id were created in userForToken
+  // in login.js
+
+  //The object decoded from the token contains the username and id fields,
+  // which tells the server who made the request.
+
+  if (!decodedToken.id) {
+    return response.status(401).json({error: 'token missing or invalid'})
+  }
+
+  const user = await User.findById(decodedToken.id)
 
   // const blog = new Blog(request.body)
   
